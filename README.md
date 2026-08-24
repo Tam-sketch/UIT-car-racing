@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 # 🏁 UIT-CAR-RACING
 ### Autonomous Navigation & Vision-Based Road Segmentation with YOLO11
@@ -108,9 +108,7 @@ UIT-CAR-RACING/
 ├── client_lib.so                           # Thư viện Socket client CPython 3.8 giao tiếp Unity
 ├── collect_data.py                         # Công cụ chụp và lưu ảnh tự động từ camera Unity
 ├── maycay.py                               # Mã nguồn Python điều khiển xe tự hành chính
-├── README.md                               # [TÀI LIỆU NÀY] Tài liệu hướng dẫn dự án chuẩn GitHub
-├── PROJECT_SUMMARY.md                      # Báo cáo kỹ thuật và chiến lược bám làn
-└── YOLO_TRAINING_GUIDE.md                  # Cẩm nang chi tiết huấn luyện YOLO & đóng gói Docker
+└── README.md                               # [TÀI LIỆU NÀY] Tài liệu hướng dẫn dự án chuẩn GitHub
 ```
 
 ---
