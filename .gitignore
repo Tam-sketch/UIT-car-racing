@@ -1,0 +1,39 @@
+﻿# ==========================================
+# Game Simulator Binaries (Too large for Git)
+# ==========================================
+Demo 1.2/
+V2_demo/
+*.exe
+*.x86_64
+*.so
+!client_lib.so
+
+# ==========================================
+# Datasets (Keep code clean, store on Drive/Kaggle)
+# ==========================================
+dataset/
+dataset/raw/
+dataset/masks/
+runs/
+
+# ==========================================
+# Python Environments & Cache
+# ==========================================
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# ==========================================
+# IDE & System Files
+# ==========================================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.tar
+*.zip
+*.rar

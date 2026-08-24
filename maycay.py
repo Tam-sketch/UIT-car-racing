@@ -1,10 +1,30 @@
+﻿import os
+import sys
+
+# Chi tat GUI khi khong co X Server (khong co bien DISPLAY)
+# Neu nguoi dung da export DISPLAY=host.docker.internal:0.0 thi giu nguyen de hien cua so
+if not os.environ.get('DISPLAY'):
+    os.environ['QT_QPA_PLATFORM'] = 'offscreen'
+
+# Tim client_lib du o /workspace hay thu muc hien tai
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.extend(["/workspace", CURRENT_DIR])
+
 from client_lib import GetStatus, GetRaw, AVControl, CloseSocket
 import cv2
 import numpy as np
 from collections import deque
 from ultralytics import YOLO
 
-model = YOLO("/workspace/Road_Seg_Model/modelYolo/weights/best.pt")  
+# Tu dong tim duong dan trong so best.pt linh hoat
+MODEL_PATHS = [
+    os.path.join(CURRENT_DIR, "Road_Seg_Model", "modelYolo", "weights", "best.pt"),
+    "/workspace/UIT-CAR-RACING/Road_Seg_Model/modelYolo/weights/best.pt",
+    "/workspace/Road_Seg_Model/modelYolo/weights/best.pt",
+    "Road_Seg_Model/modelYolo/weights/best.pt"
+]
+model_path = next((p for p in MODEL_PATHS if os.path.exists(p)), MODEL_PATHS[0])
+model = YOLO(model_path)
 
 class LastSpeed:
     value = 30
@@ -23,10 +43,10 @@ class LaneWidthEstimator:
     def __init__(self):
         self.base_width = None
         self.current_width = None
-        self.width_profile = []  # lưu tất cả phép đo (y, width)
+        self.width_profile = []  # luu tat ca phep do (y, width)
 
     def measure_width(self, gray_image, green_line_points, step=5, fraction=2):
-        """Đo độ rộng đường theo nhiều dòng y (từ đáy ảnh lên 1/fraction chiều cao)"""
+        """Do do rong duong theo nhieu dong y (tu day anh len 1/fraction chieu cao)"""
         height, width = gray_image.shape
         max_y = height - height // 3
         min_y = height - height // fraction
@@ -45,22 +65,29 @@ class LaneWidthEstimator:
                 self.width_profile.append((y, lane_width))
 
         if widths:
-            # trung vị để debug/quan sát
             self.current_width = np.median(widths)
-
             if self.base_width is None:
                 self.base_width = self.current_width
 
         return self.current_width, self.width_profile
 
     def is_wide_change(self, threshold=0.2):
-        """Chỉ cần 1 phép đo CurW > base_width * (1+threshold) là coi như đường rộng"""
+        """Chi can 1 phep do CurW > base_width * (1+threshold) la coi nhu duong rong"""
         if self.base_width is None or not self.width_profile:
             return False
         for _, w in self.width_profile:
             if w > self.base_width * (1 + threshold):
                 return True
         return False
+
+
+def show_image_safe(win_name, img):
+    """Hien thi anh an toan neu co moi truong do hoa, tranh dung luong trong Docker"""
+    try:
+        if os.environ.get('DISPLAY'):
+            cv2.imshow(win_name, img)
+    except Exception:
+        pass
 
 
 def calculate_steering_angle(segment_image, speed=30,
@@ -74,7 +101,6 @@ def calculate_steering_angle(segment_image, speed=30,
     height, width = gray.shape
     green_line_points = []
 
-    # --- Tìm tất cả điểm green ---
     for i in range(height - 1, -1, -1):
         row = gray[i, :]
         non_zero_cols = np.where(row > 0)[0]
@@ -90,18 +116,15 @@ def calculate_steering_angle(segment_image, speed=30,
     near_points = [(cx, y) for cx, y in green_line_points if y >= height // 2]
     far_points = [(cx, y) for cx, y in green_line_points if y < height // 3]
 
-    # --- Đo độ rộng đường ---
     wide_change = False
     if lane_width_estimator is not None:
         cur_w, width_profile = lane_width_estimator.measure_width(gray, green_line_points)
         wide_change = lane_width_estimator.is_wide_change()
 
-    # Nếu đường rộng hơn threshold → bỏ FAR, chỉ tin NEAR
     if wide_change:
         far_points = []
 
     if green_line_points:
-        # Weighted center
         weighted_sum = sum(cx * (height - y) for cx, y in green_line_points)
         total_weight = sum(height - y for _, y in green_line_points)
         lane_cx = int(weighted_sum / total_weight)
@@ -143,7 +166,6 @@ def calculate_steering_angle(segment_image, speed=30,
     normal_angle = base_angle * speed_factor * aggressive_factor
     normal_angle = np.clip(normal_angle, -15, 15)
 
-    # Critical error
     if blended_error >= 35:
         angle = 25
     elif blended_error <= -35:
@@ -165,27 +187,22 @@ def calculate_steering_angle(segment_image, speed=30,
 
     angle = np.clip(angle, -25, 25)
 
-    # --- Debug image ---
     debug = np.zeros((height, width, 3), dtype=np.uint8)
-    debug[gray > 0] = (90, 90, 90)  # lane gray
+    debug[gray > 0] = (90, 90, 90)
     for cx, y in green_line_points:
-        debug[y, cx] = (0, 255, 0)  # green points
+        debug[y, cx] = (0, 255, 0)
 
-    # Center line
     cv2.line(debug, (lane_cx, 0), (lane_cx, height), (0, 0, 255), 2)
 
-    # Far line
     if far_points:
         far_pts = np.array([[cx, y] for cx, y in far_points], np.int32)
         far_pts = far_pts.reshape((-1, 1, 2))
         cv2.polylines(debug, [far_pts], isClosed=False, color=(255, 0, 0), thickness=2)
 
-    # Near line
     if near_points:
         near_cx = int(np.mean([cx for cx, y in near_points]))
         cv2.line(debug, (near_cx, height // 2), (near_cx, height), (0, 255, 255), 2)
 
-    # Hiển thị CurW (từng phép đo và trung vị)
     if lane_width_estimator and lane_width_estimator.current_width:
         for (y_ref, w_ref) in lane_width_estimator.width_profile:
             cx_ref = lane_cx
@@ -202,12 +219,12 @@ def calculate_steering_angle(segment_image, speed=30,
             cv2.putText(debug, "WIDE ROAD DETECTED - Trust NEAR",
                         (30, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
-    cv2.imshow("Lane Debug", debug)
-
+    show_image_safe("Lane Debug", debug)
     return angle, blended_error, k, w_near, w_far, curve_ratio
 
 
 if __name__ == "__main__":
+    print("[INFO] Da nap xong YOLO Model! Dang khoi tao bo dieu khien...")
     angle_history = deque(maxlen=2)
     last_angle = 0
     max_delta = 15
@@ -217,15 +234,26 @@ if __name__ == "__main__":
     last_speed = LastSpeed()
 
     lane_width_estimator = LaneWidthEstimator()
+    print("[INFO] Bat dau vong lap nhan dien & dieu khien (Dang ket noi Unity)...")
 
+    frame_count = 0
     try:
         while True:
-            state = GetStatus()
-            raw_image = GetRaw()
+            try:
+                state = GetStatus()
+                raw_image = GetRaw()
+            except Exception:
+                time.sleep(0.05)
+                continue
+
+            if raw_image is None or raw_image.size == 0:
+                continue
+
+            frame_count += 1
             seg_mask = get_yolo_segmentation(raw_image)
 
-            cv2.imshow('Raw Image', raw_image)
-            cv2.imshow("YOLO Segmentation", seg_mask)
+            show_image_safe('Raw Image', raw_image)
+            show_image_safe("YOLO Segmentation", seg_mask)
 
             angle, blended_error, k, w_near, w_far, curve_ratio = calculate_steering_angle(
                 seg_mask,
@@ -234,7 +262,6 @@ if __name__ == "__main__":
                 lane_width_estimator=lane_width_estimator
             )
 
-            # Speed giảm theo curvature
             speed = max(min_speed, max_speed * (1 - 0.7 * curve_ratio))
             speed = 0.6 * last_speed.value + 0.4 * speed
             last_speed.value = speed
@@ -252,17 +279,23 @@ if __name__ == "__main__":
                 smoothed_angle = angle
             last_angle = smoothed_angle
 
-            AVControl(speed=speed, angle=smoothed_angle)
+            try:
+                AVControl(speed=speed, angle=smoothed_angle)
+            except Exception:
+                pass
 
-            print(f"Speed: {speed:.1f}, Error: {blended_error:.1f}, Curve: {curve_ratio:.2f}, "
-                  f"Angle: {smoothed_angle:.2f}, W_near: {w_near:.2f}, W_far: {w_far:.2f}")
-            print(state)
+            if frame_count % 5 == 0 or frame_count == 1:
+                print(f"[Frame {frame_count:04d}] Speed: {speed:.1f} | Angle: {smoothed_angle:.2f} | Error: {blended_error:.1f} | State: {state}")
 
-            key = cv2.waitKey(1)
-            if key == ord('q'):
-                break
+            if os.environ.get('DISPLAY'):
+                key = cv2.waitKey(1)
+                if key == ord('q'):
+                    break
 
     finally:
         print('Closing socket and windows...')
-        CloseSocket()
-        cv2.destroyAllWindows()
+        try:
+            CloseSocket()
+            cv2.destroyAllWindows()
+        except Exception:
+            pass
