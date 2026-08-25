@@ -3,12 +3,12 @@
 # 🏁 UIT-CAR-RACING
 ### Autonomous Navigation and Vision-Based Road Segmentation with YOLO11
 
-[![Python Version](https://img.shields.io/badge/Python-3.8-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![Ultralytics YOLO](https://img.shields.io/badge/YOLO11-Ultralytics-00FFFF?style=for-the-badge&logo=yolo&logoColor=black)](https://docs.ultralytics.com/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org/)
-[![Unity 3D](https://img.shields.io/badge/Unity_3D-Simulator-000000?style=for-the-badge&logo=unity&logoColor=white)](https://unity.com/)
-[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
-[![Platform](https://img.shields.io/badge/Platform-Windows_11_%7C_WSL2-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://learn.microsoft.com/en-us/windows/wsl/)
+<a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.8-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python Version"></a>
+<a href="https://docs.ultralytics.com/"><img src="https://img.shields.io/badge/YOLO11-Ultralytics-00FFFF?style=for-the-badge&logo=yolo&logoColor=black" alt="Ultralytics YOLO"></a>
+<a href="https://pytorch.org/"><img src="https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white" alt="PyTorch"></a>
+<a href="https://unity.com/"><img src="https://img.shields.io/badge/Unity_3D-Simulator-000000?style=for-the-badge&logo=unity&logoColor=white" alt="Unity 3D"></a>
+<a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"></a>
+<a href="https://learn.microsoft.com/en-us/windows/wsl/"><img src="https://img.shields.io/badge/Platform-Windows_11_%7C_WSL2-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Platform"></a>
 
 <p align="center">
   <b>Real-time autonomous driving system integrating Unity 3D simulator, deep learning road segmentation with YOLO11, and adaptive steering control.</b><br>
@@ -20,13 +20,6 @@
 ---
 
 ## ⚡ 1. One-Time Environment Setup
-
-```mermaid
-graph LR
-    A["1. Git Clone"] --> B["2. Install Docker Desktop"]
-    B --> C["3. Create Container it-car"]
-    C --> D["4. Ready to Drive"]
-```
 
 Open **VS Code Terminal** or **PowerShell as Administrator**:
 
@@ -99,7 +92,7 @@ docker run --name it-car -it -p 11000:11000 -v ${PWD}:/workspace/UIT-CAR-RACING 
    Switch to Unity window $\rightarrow$ click button **AV Mode**.
 
 > [!TIP]
-> **Real-Time Visual Monitoring:** Open [`live_view.jpg`](file:///d:/UIT-CAR-RACING/live_view.jpg) in VS Code Explorer. The composite view updates automatically without requiring X11 or XLaunch servers.
+> **Real-Time Visual Monitoring:** Open `live_view.jpg` in VS Code Explorer. The composite view updates automatically without requiring X11 or XLaunch servers.
 
 ---
 
