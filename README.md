@@ -12,7 +12,7 @@
 
 <p align="center">
   <b>Hệ thống lái xe tự hành thời gian thực kết hợp giữa mô phỏng Unity 3D, nhận diện làn đường bằng mô hình học sâu YOLO11 phân đoạn (Segmentation) và thuật toán điều khiển lái thích ứng.</b><br>
-  <i>Dự án phục vụ cuộc thi "UIT CAR RACING 2025 MÙA XIV - BẢNG CHUYÊN NGHIỆP" (ĐH Công nghệ Thông tin - ĐHQG-HCM).</i>
+  <i>Dự án phục vụ cuộc thi "UIT CAR RACING 2025 - BẢNG CHUYÊN NGHIỆP" (ĐH Công nghệ Thông tin - ĐHQG-HCM).</i>
 </p>
 
 </div>
