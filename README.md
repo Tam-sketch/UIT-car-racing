@@ -121,7 +121,7 @@ UIT-CAR-RACING/
 
 1. **Thu thập dữ liệu (Trong Terminal VS Code Docker):**
    ```bash
-   python collect_data.py --scene night --drive manual --max 1000 --interval 0.3
+   python collect_data.py --scene night [day] --drive manual --max 1000 --interval 0.3
    ```
 2. **Gán nhãn mặt nạ:**
    - Dùng [Roboflow](https://roboflow.com) (Smart Polygon) gán nhãn lớp `road` $\rightarrow$ Export định dạng **YOLOv8 Segmentation**.
