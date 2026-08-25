@@ -1,10 +1,12 @@
-﻿import os
+import os
 import sys
+import time
 
-# Chi tat GUI khi khong co X Server (khong co bien DISPLAY)
-# Neu nguoi dung da export DISPLAY=host.docker.internal:0.0 thi giu nguyen de hien cua so
-if not os.environ.get('DISPLAY'):
-    os.environ['QT_QPA_PLATFORM'] = 'offscreen'
+# Xóa biến QT_QPA_PLATFORM nếu bị set nhầm plugin offscreen không tồn tại
+os.environ.pop('QT_QPA_PLATFORM', None)
+
+# Chỉ bật GUI khi có cờ ENABLE_GUI=1 và có DISPLAY hợp lệ
+SHOW_GUI = (os.environ.get('ENABLE_GUI', '').lower() in ['1', 'true', 'yes']) and bool(os.environ.get('DISPLAY'))
 
 # Tim client_lib du o /workspace hay thu muc hien tai
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -83,11 +85,11 @@ class LaneWidthEstimator:
 
 def show_image_safe(win_name, img):
     """Hien thi anh an toan neu co moi truong do hoa, tranh dung luong trong Docker"""
-    try:
-        if os.environ.get('DISPLAY'):
+    if SHOW_GUI:
+        try:
             cv2.imshow(win_name, img)
-    except Exception:
-        pass
+        except Exception:
+            pass
 
 
 def calculate_steering_angle(segment_image, speed=30,
@@ -234,23 +236,46 @@ if __name__ == "__main__":
     last_speed = LastSpeed()
 
     lane_width_estimator = LaneWidthEstimator()
-    print("[INFO] Bat dau vong lap nhan dien & dieu khien (Dang ket noi Unity)...")
+    print("[INFO] Bat dau vong lap nhan dien & dieu khien (Dang ket noi Unity)...", flush=True)
+    print("  -> Hay dam bao Game Unity dang mo va da vao sa hinh!", flush=True)
 
     frame_count = 0
+    waiting_count = 0
+    connected_announced = False
+
     try:
         while True:
             try:
                 state = GetStatus()
                 raw_image = GetRaw()
-            except Exception:
+            except Exception as e:
                 time.sleep(0.05)
                 continue
 
             if raw_image is None or raw_image.size == 0:
+                waiting_count += 1
+                if waiting_count % 30 == 0:
+                    print("[INFO] Dang cho frame anh tu Unity... (Neu chua bat game, hay khoi dong Unity)", flush=True)
+                time.sleep(0.05)
                 continue
 
+            if not connected_announced:
+                print(f"[INFO] >>> DA KET NOI THANH CONG! Nhan frame {raw_image.shape} tu Unity <<<", flush=True)
+                connected_announced = True
+
+            waiting_count = 0
             frame_count += 1
             seg_mask = get_yolo_segmentation(raw_image)
+
+            # Lưu ảnh trực quan hóa để xem ngay trong VS Code (không cần XLaunch)
+            if frame_count % 5 == 0:
+                try:
+                    colored_mask = cv2.applyColorMap(seg_mask, cv2.COLORMAP_JET)
+                    blend = cv2.addWeighted(raw_image, 0.6, colored_mask, 0.4, 0)
+                    combined_view = np.hstack((raw_image, blend))
+                    cv2.imwrite(os.path.join(CURRENT_DIR, "live_view.jpg"), combined_view)
+                except Exception:
+                    pass
 
             show_image_safe('Raw Image', raw_image)
             show_image_safe("YOLO Segmentation", seg_mask)
@@ -280,14 +305,15 @@ if __name__ == "__main__":
             last_angle = smoothed_angle
 
             try:
-                AVControl(speed=speed, angle=smoothed_angle)
-            except Exception:
-                pass
+                AVControl(speed=float(speed), angle=float(smoothed_angle))
+            except Exception as e:
+                if frame_count % 10 == 0:
+                    print(f"[ERROR AVControl]: {e}", flush=True)
 
-            if frame_count % 5 == 0 or frame_count == 1:
-                print(f"[Frame {frame_count:04d}] Speed: {speed:.1f} | Angle: {smoothed_angle:.2f} | Error: {blended_error:.1f} | State: {state}")
+            if frame_count % 3 == 0 or frame_count == 1:
+                print(f"[Frame {frame_count:04d}] Speed: {speed:.1f} | Angle: {smoothed_angle:+.2f} | Error: {blended_error:+.1f}", flush=True)
 
-            if os.environ.get('DISPLAY'):
+            if SHOW_GUI:
                 key = cv2.waitKey(1)
                 if key == ord('q'):
                     break
