@@ -1,7 +1,7 @@
 <div align="center">
 
 # 🏁 UIT-CAR-RACING
-### Autonomous Navigation & Vision-Based Road Segmentation with YOLO11
+### Autonomous Navigation and Vision-Based Road Segmentation with YOLO11
 
 [![Python Version](https://img.shields.io/badge/Python-3.8-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Ultralytics YOLO](https://img.shields.io/badge/YOLO11-Ultralytics-00FFFF?style=for-the-badge&logo=yolo&logoColor=black)](https://docs.ultralytics.com/)
@@ -11,175 +11,195 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows_11_%7C_WSL2-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://learn.microsoft.com/en-us/windows/wsl/)
 
 <p align="center">
-  <b>Hệ thống lái xe tự hành thời gian thực kết hợp giữa mô phỏng Unity 3D, nhận diện làn đường bằng mô hình học sâu YOLO11 phân đoạn (Segmentation) và thuật toán điều khiển lái thích ứng.</b><br>
-  <i>Dự án phục vụ cuộc thi "UIT CAR RACING 2025 - BẢNG CHUYÊN NGHIỆP" (ĐH Công nghệ Thông tin - ĐHQG-HCM).</i>
+  <b>Real-time autonomous driving system integrating Unity 3D simulator, deep learning road segmentation with YOLO11, and adaptive steering control.</b><br>
+  <i>Developed for UIT CAR RACING 2025 Season XIV - Professional League by Faculty of Computer Engineering, University of Information Technology, VNU-HCM.</i>
 </p>
 
 </div>
 
 ---
 
-## ⚡ 1. Cài đặt Môi trường từ Đầu (Chỉ làm 1 lần)
+## ⚡ 1. One-Time Environment Setup
 
-Mở **Terminal trong VS Code (`Ctrl + ~`)** hoặc PowerShell:
+```mermaid
+graph LR
+    A["1. Git Clone"] --> B["2. Install Docker Desktop"]
+    B --> C["3. Create Container it-car"]
+    C --> D["4. Ready to Drive"]
+```
+
+Open **VS Code Terminal** or **PowerShell as Administrator**:
 
 ```powershell
-# 1. Kéo mã nguồn dự án
+# 1. Clone project repository
 git clone https://github.com/Tam-sketch/UIT-car-racing.git
 cd UIT-car-racing
 
-# 2. Kéo Docker Image chính thức của Ban tổ chức
+# 2. Pull official competition Docker image
 docker pull quocle28/it_car_2023:v1
 
-# 3. Tạo Container 'it-car' gắn mã nguồn và kích hoạt GPU
+# 3. Create container it-car with GPU and mounted workspace
 docker run --name it-car -it -p 11000:11000 -v ${PWD}:/workspace/UIT-CAR-RACING --shm-size=8G --gpus all quocle28/it_car_2023:v1 /bin/bash
 ```
 
-*(Nếu dùng bản đồ Ban đêm `V2_demo`, cài WSL2 bằng cách mở PowerShell gõ `wsl --install` và cài thư viện đồ họa: `sudo apt update && sudo apt install -y libglu1-mesa libgles2-mesa mesa-utils libasound2`)*.
+> [!NOTE]
+> If running the Linux Night Map V2_demo, install WSL2 via `wsl --install` then install graphics libraries inside WSL:
+> `sudo apt update && sudo apt install -y libglu1-mesa libgles2-mesa mesa-utils libasound2`
 
 ---
 
-## 🚀 2. Hướng dẫn Khởi chạy Hàng ngày (Ngay trong VS Code)
+## 🚀 2. Daily Workflow in VS Code
 
-> 💡 **Mẹo:** Bạn chỉ cần mở VS Code, toàn bộ quá trình điều khiển xe, xem camera và chạy Docker đều thực hiện trong **Terminal VS Code (`Ctrl + ~`)**.
+> [!TIP]
+> All controller execution, Docker management, and live camera monitoring happen directly inside **VS Code Terminal**.
 
 ---
 
-### 🚗 TRƯỜNG HỢP A: Bản đồ Windows Ban ngày (`Demo 1.2` `.exe`)
+### 🚗 Case A: Windows Daytime Map - Demo 1.2
 
-1. **Khởi động Game:** Mở thư mục `Demo 1.2` $\rightarrow$ nhấp đúp `UCR_Unity.exe` $\rightarrow$ bấm **Play**.
-2. **Khởi động Controller (Trong Terminal VS Code):**
+1. **Launch Game Simulator:**
+   Open directory `Demo 1.2` $\rightarrow$ double-click `UCR_Unity.exe` $\rightarrow$ click **Play**.
+
+2. **Start Controller inside VS Code Terminal:**
    ```powershell
    docker start -ai it-car
    ```
-   *Bên trong Docker, dán cụm lệnh:*
+   Paste the following commands into the Docker session:
    ```bash
    pkill -9 socat 2>/dev/null; fuser -k 11000/tcp 2>/dev/null; sleep 1
    socat TCP-LISTEN:11000,reuseaddr,fork TCP:host.docker.internal:11000 &
    cd /workspace/UIT-CAR-RACING
    python maycay.py
    ```
-3. **Bắt đầu Lái:** Chuyển sang cửa sổ Unity $\rightarrow$ Click nút **`AV Mode`**.
+
+3. **Engage Autonomous Mode:**
+   Switch to Unity window $\rightarrow$ click button **AV Mode**.
 
 ---
 
-### 🌙 TRƯỜNG HỢP B: Bản đồ Linux Ban đêm (`V2_demo` `.x86_64`)
+### 🌙 Case B: Linux Night Map - V2_demo
 
-1. **Cửa sổ PowerShell ngoài (Bật game Unity WSL2):**
+1. **External PowerShell Window - Start Unity in WSL2:**
    ```bash
    wsl chmod +x /mnt/d/UIT-car-racing/V2_demo/UCRlinux.x86_64
    wsl SDL_AUDIODRIVER=dummy /mnt/d/UIT-car-racing/V2_demo/UCRlinux.x86_64
    ```
-2. **Terminal trong VS Code (Khởi động Controller):**
+
+2. **VS Code Terminal - Start Controller:**
    ```powershell
    docker start -ai it-car
    ```
-   *Bên trong Docker chạy:*
+   Run the launcher script inside Docker:
    ```bash
    cd /workspace/UIT-CAR-RACING
    bash run_maycay.sh
    ```
-3. **Bắt đầu Lái:** Chuyển sang cửa sổ Unity $\rightarrow$ Click nút **`AV Mode`**.
+
+3. **Engage Autonomous Mode:**
+   Switch to Unity window $\rightarrow$ click button **AV Mode**.
 
 > [!TIP]
-> **Xem trực tiếp Camera & YOLO trong VS Code:** Mở file [`live_view.jpg`](file:///d:/UIT-CAR-RACING/live_view.jpg) ngay trên thanh Explorer của VS Code. Ảnh sẽ tự cập nhật liên tục thời gian thực mà không cần cài đặt XLaunch/GUI phức tạp.
+> **Real-Time Visual Monitoring:** Open [`live_view.jpg`](file:///d:/UIT-CAR-RACING/live_view.jpg) in VS Code Explorer. The composite view updates automatically without requiring X11 or XLaunch servers.
 
 ---
 
-## 📂 3. Cấu trúc Dự án
+## 📂 3. Project Structure
 
 ```text
 UIT-CAR-RACING/
-├── dataset/                                # Dữ liệu hình ảnh thu thập
+├── dataset/                                # Raw training datasets
 │   └── raw/
-│       ├── day/                            # Ảnh thô ban ngày
-│       └── night/                          # Ảnh thô ban đêm (1061 ảnh)
-├── Demo 1.2/                               # Bản đồ giả lập Windows (.exe)
-├── V2_demo/                                # Bản đồ giả lập Linux (.x86_64)
-├── Road_Seg_Model/                         # Trọng số & kết quả mô hình YOLO
+│       ├── day/                            # Daytime raw frames
+│       └── night/                          # Night raw frames
+├── Demo 1.2/                               # Windows Unity Simulator
+├── V2_demo/                                # Linux Unity Simulator
+├── Road_Seg_Model/                         # Model weights and training results
 │   └── modelYolo/weights/
-│       ├── best.pt                         # Trọng số tốt nhất đang triển khai
-│       └── last.pt
-├── training/                               # Bộ công cụ huấn luyện
-│   ├── configs/                            # Cấu hình dataset (.yaml)
+│       ├── best.pt                         # Active production weight
+│       └── last.pt                         # Last epoch checkpoint
+├── training/                               # Training pipeline and utilities
+│   ├── configs/                            # Dataset YAML definitions
 │   ├── utils/
-│   │   ├── convert_mask_to_yolo.py         # Chuyển đổi Mask sang Polygon YOLO
-│   │   └── prepare_sign_dataset.py         # Gán nhãn biển báo (SAM + lọc tròn)
-│   ├── train_road.py                       # Huấn luyện làn đường nội bộ
-│   └── train_night_kaggle.ipynb            # Notebook huấn luyện Kaggle GPU T4
-├── client_lib.so                           # Socket Client CPython 3.8 giao tiếp Unity
-├── collect_data.py                         # Công cụ chụp ảnh dataset tự động
-├── maycay.py                               # Mã nguồn điều khiển xe tự hành chính
-├── run_maycay.sh                           # Script chạy nhanh tự động bắt IP WSL2
-├── KNOWLEDGE_BASE.md                       # Báo cáo kỹ thuật chi tiết toàn diện
-└── README.md                               # Tài liệu hướng dẫn này
+│   │   ├── convert_mask_to_yolo.py         # Mask to YOLO polygon converter
+│   │   └── prepare_sign_dataset.py         # Traffic sign auto-labeler
+│   ├── train_road.py                       # Local road training script
+│   └── train_night_kaggle.ipynb            # Kaggle GPU T4 training notebook
+├── client_lib.so                           # Socket client interface for Python 3.8
+├── collect_data.py                         # Automated frame capture utility
+├── maycay.py                               # Core autonomous driving controller
+├── run_maycay.sh                           # Fast launcher for WSL2 network bridge
+├── KNOWLEDGE_BASE.md                       # Comprehensive engineering report
+└── README.md                               # Project guide
 ```
 
 ---
 
-## 🚂 4. Quy trình Huấn luyện Mô hình mới (Kaggle GPU)
+## 🚂 4. Retraining Pipeline on Kaggle GPU
 
-1. **Thu thập dữ liệu (Trong Terminal VS Code Docker):**
+1. **Collect Images in VS Code Docker Terminal:**
    ```bash
-   python collect_data.py --scene night [day] --drive manual --max 1000 --interval 0.3
+   python collect_data.py --scene night --drive manual --max 1000 --interval 0.3
    ```
-2. **Gán nhãn mặt nạ:**
-   - Dùng [Roboflow](https://roboflow.com) (Smart Polygon) gán nhãn lớp `road` $\rightarrow$ Export định dạng **YOLOv8 Segmentation**.
-3. **Huấn luyện trên Kaggle (GPU T4 Miễn phí):**
-   - Upload file zip dataset lên [Kaggle Datasets](https://www.kaggle.com/datasets).
-   - Mở file `training/train_night_kaggle.ipynb` trên Kaggle $\rightarrow$ Chọn Accelerator **GPU T4** $\rightarrow$ Bấm **Run All**.
-4. **Triển khai Model:**
-   - Tải `best_night.pt` từ tab Output về máy.
-   - Đổi tên và chép đè vào: `Road_Seg_Model/modelYolo/weights/best.pt`.
+
+2. **Annotate Ground Truth Masks:**
+   Import frames into Roboflow Smart Polygon with class `road` $\rightarrow$ Export as **YOLOv8 Segmentation**.
+
+3. **Train on Kaggle with Free GPU T4:**
+   Upload zipped dataset to Kaggle Datasets $\rightarrow$ Open `training/train_night_kaggle.ipynb` $\rightarrow$ Select **GPU T4** $\rightarrow$ Click **Run All**.
+
+4. **Deploy Weights:**
+   Download `best_night.pt` from Kaggle Output $\rightarrow$ Rename and replace `Road_Seg_Model/modelYolo/weights/best.pt`.
 
 ---
 
-## 📦 5. Đóng gói Nộp bài Thi đấu
+## 📦 5. Competition Submission Packaging
 
 ```powershell
-# 1. Tại Terminal VS Code (PowerShell), lưu container thành Image mới:
+# 1. Commit container state to a new submission image:
 docker commit it-car uit_car_racing_submission:v1.0
 
-# 2. Xuất Image ra tệp nén .tar vật lý:
+# 2. Export image to compressed tarball:
 docker save -o uit_car_racing_submission.tar uit_car_racing_submission:v1.0
 
-# 3. Chuẩn bị file instruction.txt ghi chú lệnh chạy:
-#    "python /workspace/UIT-CAR-RACING/maycay.py"
+# 3. Create instruction.txt specifying startup command:
+#    python /workspace/UIT-CAR-RACING/maycay.py
 ```
 
 ---
 
-## ⚠️ 6. Cẩm nang Khắc phục Sự cố
+## ⚠️ 6. Troubleshooting Matrix
 
-| Vấn đề | Nguyên nhân | Cách khắc phục |
+| Issue | Root Cause | Solution |
 | :--- | :--- | :--- |
-| **Xe đứng yên, log không chạy** | Unity ở giữa đường chưa bắt tay Socket | Nhấn phím **`R`** trong game Unity để reset về vạch xuất phát. |
-| **`ConnectionRefusedError: [Errno 111]`** | Unity chưa bật hoặc socat chưa chạy | Mở game Unity trước $\rightarrow$ chạy lại lệnh `socat ...` trong Docker. |
-| **`undefined symbol: _Py_CheckRecursionLimit`** | Chạy Python 3.10+ ngoài WSL/Host | Bắt buộc chạy `python maycay.py` **trong Docker Container `it-car`** (Python 3.8). |
-| **`Address already in use` 11000** | Cổng cũ còn lưu trạng thái TIME_WAIT | Chạy `fuser -k 11000/tcp` trong Docker trước khi bật socat. |
-| **`Angle: +0.00`, `Error: +0.0` liên tục** | Model YOLO không nhận diện được đường | Kiểm tra chất lượng trọng số `best.pt` hoặc gán nhãn lại dataset ban đêm. |
+| **Car idle, no log flow** | Unity socket session out of sync | Press **R** in Unity to reset car to starting line. |
+| **ConnectionRefusedError 111** | Unity not running or socat bridge dead | Open Unity game first, then re-execute socat in Docker. |
+| **undefined symbol _Py_CheckRecursionLimit** | Running outside Python 3.8 environment | Run `python maycay.py` strictly inside **it-car Docker container**. |
+| **Address already in use 11000** | Port occupied by dangling socket | Run `fuser -k 11000/tcp` inside Docker before launching socat. |
+| **Angle +0.00 and Error +0.0 constantly** | Model fails to detect road surface | Retrain model with high quality annotations from Roboflow. |
 
 ---
 
-## 🧹 7. Dọn dẹp & Giải phóng 15 – 25 GB Ổ cứng khi không dùng
+## 🧹 7. Reclaiming Disk Space
 
-Khi kết thúc đợt thực hành và muốn lấy lại dung lượng trống cho máy tính:
+When pausing development and freeing 15 to 25 GB of disk space:
 
 ```powershell
-# 1. Xóa Docker container và image giải phóng ~12 GB
+# 1. Purge Docker container and images to reclaim 12 GB
 docker rm -f it-car
 docker system prune -a --volumes -f
 
-# 2. Xóa máy ảo WSL2 giải phóng ~5 - 10 GB
+# 2. Remove WSL2 virtual disk to reclaim 5 to 10 GB
 wsl --shutdown
 wsl --unregister Ubuntu
 wsl --unregister docker-desktop
 wsl --unregister docker-desktop-data
 ```
-*(Toàn bộ mã nguồn, model và tài liệu đã được lưu trữ an toàn trên GitHub, bạn có thể tái tạo lại môi trường theo [Mục 1](#-1-cài-đặt-môi-trường-từ-đầu-chỉ-làm-1-lần) trong vòng 5 phút).*
+
+> [!IMPORTANT]
+> All code, model weights, and guides are securely preserved in GitHub. The complete workspace can be restored at any time within 5 minutes.
 
 ---
 
 <div align="center">
-  <sub>UIT-CAR-RACING • Developed with ❤️ for UIT Autonomous Car Racing 2025</sub>
+  <sub>UIT-CAR-RACING • Developed with passion for UIT Autonomous Car Racing 2025</sub>
 </div>
