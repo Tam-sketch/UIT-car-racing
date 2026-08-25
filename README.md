@@ -21,14 +21,7 @@
 
 ## ⚡ 1. Cài đặt Môi trường từ Đầu (Chỉ làm 1 lần)
 
-```mermaid
-graph LR
-    A["1. Git Clone Repo"] --> B["2. Cài Docker Desktop"]
-    B --> C["3. Khởi tạo Container 'it-car'"]
-    C --> D["4. Sẵn sàng Chạy Xe!"]
-```
-
-Mở **PowerShell (Administrator)** trên Windows:
+Mở **Terminal trong VS Code (`Ctrl + ~`)** hoặc PowerShell:
 
 ```powershell
 # 1. Kéo mã nguồn dự án
@@ -42,20 +35,24 @@ docker pull quocle28/it_car_2023:v1
 docker run --name it-car -it -p 11000:11000 -v ${PWD}:/workspace/UIT-CAR-RACING --shm-size=8G --gpus all quocle28/it_car_2023:v1 /bin/bash
 ```
 
-*(Nếu chạy sa hình Linux Ban đêm `V2_demo`, mở PowerShell gõ `wsl --install` và cài thư viện đồ họa: `sudo apt update && sudo apt install -y libglu1-mesa libgles2-mesa mesa-utils libasound2`)*.
+*(Nếu dùng bản đồ Ban đêm `V2_demo`, cài WSL2 bằng cách mở PowerShell gõ `wsl --install` và cài thư viện đồ họa: `sudo apt update && sudo apt install -y libglu1-mesa libgles2-mesa mesa-utils libasound2`)*.
 
 ---
 
-## 🚀 2. Hướng dẫn Khởi chạy Hàng ngày
+## 🚀 2. Hướng dẫn Khởi chạy Hàng ngày (Ngay trong VS Code)
+
+> 💡 **Mẹo:** Bạn chỉ cần mở VS Code, toàn bộ quá trình điều khiển xe, xem camera và chạy Docker đều thực hiện trong **Terminal VS Code (`Ctrl + ~`)**.
+
+---
 
 ### 🚗 TRƯỜNG HỢP A: Bản đồ Windows Ban ngày (`Demo 1.2` `.exe`)
 
 1. **Khởi động Game:** Mở thư mục `Demo 1.2` $\rightarrow$ nhấp đúp `UCR_Unity.exe` $\rightarrow$ bấm **Play**.
-2. **Khởi động Controller trong Docker (PowerShell):**
+2. **Khởi động Controller (Trong Terminal VS Code):**
    ```powershell
    docker start -ai it-car
    ```
-   *Dán cụm lệnh sau vào terminal Docker:*
+   *Bên trong Docker, dán cụm lệnh:*
    ```bash
    pkill -9 socat 2>/dev/null; fuser -k 11000/tcp 2>/dev/null; sleep 1
    socat TCP-LISTEN:11000,reuseaddr,fork TCP:host.docker.internal:11000 &
@@ -68,12 +65,12 @@ docker run --name it-car -it -p 11000:11000 -v ${PWD}:/workspace/UIT-CAR-RACING 
 
 ### 🌙 TRƯỜNG HỢP B: Bản đồ Linux Ban đêm (`V2_demo` `.x86_64`)
 
-1. **Terminal 1 (WSL):** Mở game Unity:
+1. **Cửa sổ PowerShell ngoài (Bật game Unity WSL2):**
    ```bash
-   chmod +x /mnt/d/UIT-car-racing/V2_demo/UCRlinux.x86_64
-   SDL_AUDIODRIVER=dummy /mnt/d/UIT-car-racing/V2_demo/UCRlinux.x86_64
+   wsl chmod +x /mnt/d/UIT-car-racing/V2_demo/UCRlinux.x86_64
+   wsl SDL_AUDIODRIVER=dummy /mnt/d/UIT-car-racing/V2_demo/UCRlinux.x86_64
    ```
-2. **Terminal 2 (PowerShell):** Khởi động Controller:
+2. **Terminal trong VS Code (Khởi động Controller):**
    ```powershell
    docker start -ai it-car
    ```
@@ -85,7 +82,7 @@ docker run --name it-car -it -p 11000:11000 -v ${PWD}:/workspace/UIT-CAR-RACING 
 3. **Bắt đầu Lái:** Chuyển sang cửa sổ Unity $\rightarrow$ Click nút **`AV Mode`**.
 
 > [!TIP]
-> **Xem hình ảnh Camera & YOLO trực tiếp:** Mở file [`live_view.jpg`](file:///d:/UIT-CAR-RACING/live_view.jpg) ngay trong VS Code, ảnh sẽ cập nhật liên tục thời gian thực mà không cần cài đặt XLaunch/GUI.
+> **Xem trực tiếp Camera & YOLO trong VS Code:** Mở file [`live_view.jpg`](file:///d:/UIT-CAR-RACING/live_view.jpg) ngay trên thanh Explorer của VS Code. Ảnh sẽ tự cập nhật liên tục thời gian thực mà không cần cài đặt XLaunch/GUI phức tạp.
 
 ---
 
@@ -122,7 +119,7 @@ UIT-CAR-RACING/
 
 ## 🚂 4. Quy trình Huấn luyện Mô hình mới (Kaggle GPU)
 
-1. **Thu thập dữ liệu:**
+1. **Thu thập dữ liệu (Trong Terminal VS Code Docker):**
    ```bash
    python collect_data.py --scene night --drive manual --max 1000 --interval 0.3
    ```
@@ -133,14 +130,14 @@ UIT-CAR-RACING/
    - Mở file `training/train_night_kaggle.ipynb` trên Kaggle $\rightarrow$ Chọn Accelerator **GPU T4** $\rightarrow$ Bấm **Run All**.
 4. **Triển khai Model:**
    - Tải `best_night.pt` từ tab Output về máy.
-   - Đổi tên và chép vào: `Road_Seg_Model/modelYolo/weights/best.pt`.
+   - Đổi tên và chép đè vào: `Road_Seg_Model/modelYolo/weights/best.pt`.
 
 ---
 
 ## 📦 5. Đóng gói Nộp bài Thi đấu
 
 ```powershell
-# 1. Tại PowerShell Windows Host, lưu container thành Image mới:
+# 1. Tại Terminal VS Code (PowerShell), lưu container thành Image mới:
 docker commit it-car uit_car_racing_submission:v1.0
 
 # 2. Xuất Image ra tệp nén .tar vật lý:
