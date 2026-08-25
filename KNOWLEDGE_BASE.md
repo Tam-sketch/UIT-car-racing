@@ -151,3 +151,24 @@ UIT-CAR-RACING/
 <div align="center">
   <sub>Document copyright belongs to the UIT-CAR-RACING Team • Autonomous Car Racing Competition 2025</sub>
 </div>
+
+## 7. CORE SOURCE CODE LOGIC
+
+The script maycay.py acts as the central orchestrator. Below is the step by step breakdown of its internal execution logic.
+
+### 7.1. Initialization Phase
+* The YOLO11 model weights are loaded into GPU memory from best.pt.
+* Variables for tracking consecutive states like last angle, speed buffer, and lane width history are initialized to ensure smooth transitions between frames.
+
+### 7.2. The Infinite Control Loop
+The main loop runs infinitely at approximately 30 frames per second. Each iteration performs the following:
+* **Data Fetching**: Executes GetStatus followed by GetRaw to retrieve the current game state and RGB image array.
+* **YOLO Inference**: Passes the RGB image to the get_yolo_segmentation function. The model runs prediction with a confidence threshold set to 0.05. It extracts the road class and outputs a binary numpy array where road pixels are white and background pixels are black.
+* **Steering Calculation**: Passes the binary mask to the calculate_steering_angle function. This function executes the multi-layered algorithm described in Section 3.
+* **Smoothing**: Limits the maximum steering change per frame to 15 degrees. This prevents jerky car movements and ensures smooth steering curves.
+* **Command Execution**: Sends the calculated speed and smoothed angle back to the Unity simulator via AVControl.
+* **Headless Monitoring**: Every 5 frames, the script overlays the YOLO mask onto the raw RGB image and saves it to disk as live_view.jpg. This allows developers to monitor the AI vision continuously without requiring graphical display environments.
+
+### 7.3. Error Handling and Resilience
+* If GetRaw returns an empty buffer during game pauses or loading screens, the script simply sleeps for 50 milliseconds and continues the loop without crashing.
+* All variable casts, especially converting float objects for the AVControl socket, are wrapped in robust exception handlers to prevent runtime crashes caused by unexpected network packet corruption.
